@@ -9,12 +9,14 @@ import (
 	"os"
 	"path"
 	"strings"
+	"encoding/json"
 )
 
 var (
 	flagTestdir = ""
 	flagShowAll = false
 	flagEncoder = false
+	flagJsonOut = false
 )
 
 var (
@@ -50,6 +52,8 @@ func init() {
 		"When set, all tests will be shown.")
 	flag.BoolVar(&flagEncoder, "encoder", flagEncoder,
 		"When set, the given executable will be tested as a TOML encoder.")
+	flag.BoolVar(&flagJsonOut, "json", flagJsonOut,
+		"When set, the test result output will be in JSON")
 
 	flag.Usage = usage
 	flag.Parse()
@@ -68,8 +72,8 @@ func usage() {
 		path.Base(os.Args[0]))
 	log.Println(`
 parser-cmd should be a program that accepts TOML data on stdin until EOF,
-and outputs the corresponding JSON encoding on stdout. Please see 'README.md' 
-for details on how to satisfy the interface expected by 'toml-test' with your 
+and outputs the corresponding JSON encoding on stdout. Please see 'README.md'
+for details on how to satisfy the interface expected by 'toml-test' with your
 own parser.
 
 The 'testdir' directory should have two sub-directories: 'invalid' and 'valid'.
@@ -116,23 +120,43 @@ func main() {
 		}
 	}
 
-	out := make([]string, 0, len(results))
-	passed, failed := 0, 0
-	for _, r := range results {
-		if flagShowAll || r.failed() {
-			out = append(out, r.String())
+	failed := 0
+
+	if !flagJsonOut {
+		out := make([]string, 0, len(results))
+		passed:= 0
+		for _, r := range results {
+			if flagShowAll || r.failed() {
+				out = append(out, r.String())
+			}
+			if r.failed() {
+				failed++
+			} else {
+				passed++
+			}
 		}
-		if r.failed() {
-			failed++
-		} else {
-			passed++
+		if len(out) > 0 {
+			fmt.Println(strings.Join(out, "\n"+strings.Repeat("-", 79)+"\n"))
+			fmt.Println("")
+		}
+		fmt.Printf("%d passed, %d failed\n", passed, failed)
+	} else {
+		if !flagShowAll {
+			failed := []result{}
+			for _, r:= range results {
+				if r.failed() {
+					failed = append(failed, r)
+				}
+			}
+			results = failed
+		}
+		err := json.NewEncoder(os.Stdout).Encode(results)
+		if err != nil {
+			fmt.Println("Something went wrong")
+			os.Exit(2)
 		}
 	}
-	if len(out) > 0 {
-		fmt.Println(strings.Join(out, "\n"+strings.Repeat("-", 79)+"\n"))
-		fmt.Println("")
-	}
-	fmt.Printf("%d passed, %d failed\n", passed, failed)
+
 	if failed > 0 {
 		os.Exit(1)
 	}
@@ -175,7 +199,7 @@ func runTestByName(name string) result {
 
 		return runValidTest(name)
 	}
-	return result{testName: name}.errorf(
+	return result{TestName: name}.errorf(
 		"Could not find test in '%s' or '%s'.", dirInvalid, dirValid)
 }
 

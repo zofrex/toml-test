@@ -18,7 +18,7 @@ func (r result) cmpJson(expected, test interface{}) result {
 		return r.cmpJsonArrays(e, test)
 	default:
 		return r.failedf("Key '%s' in expected output should be a map or a "+
-			"list of maps, but it's a %T.", r.key, expected)
+			"list of maps, but it's a %T.", r.Key, expected)
 	}
 	panic("unreachable")
 }
@@ -34,11 +34,11 @@ func (r result) cmpJsonMaps(
 	// Check to make sure both or neither are values.
 	if isValue(e) && !isValue(t) {
 		return r.failedf("Key '%s' is supposed to be a value, but the "+
-			"parser reports it as a table.", r.key)
+			"parser reports it as a table.", r.Key)
 	}
 	if !isValue(e) && isValue(t) {
 		return r.failedf("Key '%s' is supposed to be a table, but the "+
-			"parser reports it as a value.", r.key)
+			"parser reports it as a value.", r.Key)
 	}
 	if isValue(e) && isValue(t) {
 		return r.cmpJsonValues(e, t)
@@ -49,14 +49,14 @@ func (r result) cmpJsonMaps(
 		if _, ok := t[k]; !ok {
 			bunk := r.kjoin(k)
 			return bunk.failedf("Could not find key '%s' in parser output.",
-				bunk.key)
+				bunk.Key)
 		}
 	}
 	for k, _ := range t {
 		if _, ok := e[k]; !ok {
 			bunk := r.kjoin(k)
 			return bunk.failedf("Could not find key '%s' in expected output.",
-				bunk.key)
+				bunk.Key)
 		}
 	}
 
@@ -83,7 +83,7 @@ func (r result) cmpJsonArrays(e, t interface{}) result {
 	}
 	if len(ea) != len(ta) {
 		return r.failedf("Array lengths differ for key '%s'. Expected a "+
-			"length of %d but got %d.", r.key, len(ea), len(ta))
+			"length of %d but got %d.", r.Key, len(ea), len(ta))
 	}
 	for i := 0; i < len(ea); i++ {
 		if sub := r.cmpJson(ea[i], ta[i]); sub.failed() {
@@ -136,7 +136,7 @@ func (r result) cmpJsonValues(e, t map[string]interface{}) result {
 	// Otherwise, we can do simple string equality.
 	if e["value"] != t["value"] {
 		return r.failedf("Values for key '%s' don't match. Expected a "+
-			"value of '%s' but got '%s'.", r.key, e["value"], t["value"])
+			"value of '%s' but got '%s'.", r.Key, e["value"], t["value"])
 	}
 	return r
 }
@@ -145,17 +145,17 @@ func (r result) cmpFloats(e, t string) result {
 	ef, err := strconv.ParseFloat(e, 64)
 	if err != nil {
 		return r.failedf("BUG in test case. Could not read '%s' as a float "+
-			"value for key '%s'.", e, r.key)
+			"value for key '%s'.", e, r.Key)
 	}
 
 	tf, err := strconv.ParseFloat(t, 64)
 	if err != nil {
 		return r.failedf("Malformed parser output. Could not read '%s' as "+
-			"a float value for key '%s'.", t, r.key)
+			"a float value for key '%s'.", t, r.Key)
 	}
 	if ef != tf {
 		return r.failedf("Values for key '%s' don't match. Expected a "+
-			"value of '%v' but got '%v'.", r.key, ef, tf)
+			"value of '%v' but got '%v'.", r.Key, ef, tf)
 	}
 	return r
 }
