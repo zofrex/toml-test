@@ -16,12 +16,12 @@ func (r result) cmpToml(expected, test interface{}) result {
 		if !isTomlValue(test) {
 			return r.failedf("Key '%s' in expected output is a primitive "+
 				"TOML value (not table or array), but the encoder provided "+
-				"a %T.", r.key, test)
+				"a %T.", r.Key, test)
 		}
 		if !reflect.DeepEqual(expected, test) {
 			return r.failedf("Values for key '%s' differ. Expected value is "+
 				"%v (%T), but your encoder produced %v (%T).",
-				r.key, expected, expected, test, test)
+				r.Key, expected, expected, test, test)
 		}
 		return r
 	}
@@ -50,14 +50,14 @@ func (r result) cmpTomlMaps(
 		if _, ok := t[k]; !ok {
 			bunk := r.kjoin(k)
 			return bunk.failedf("Could not find key '%s' in encoder output.",
-				bunk.key)
+				bunk.Key)
 		}
 	}
 	for k, _ := range t {
 		if _, ok := e[k]; !ok {
 			bunk := r.kjoin(k)
 			return bunk.failedf("Could not find key '%s' in expected output.",
-				bunk.key)
+				bunk.Key)
 		}
 	}
 
@@ -77,7 +77,7 @@ func (r result) cmpTomlArrays(ea []interface{}, t interface{}) result {
 	}
 	if len(ea) != len(ta) {
 		return r.failedf("Array lengths differ for key '%s'. Expected a "+
-			"length of %d but got %d.", r.key, len(ea), len(ta))
+			"length of %d but got %d.", r.Key, len(ea), len(ta))
 	}
 	for i := 0; i < len(ea); i++ {
 		if sub := r.cmpToml(ea[i], ta[i]); sub.failed() {

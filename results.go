@@ -12,44 +12,44 @@ import (
 )
 
 type result struct {
-	testName string
-	err      error
-	valid    bool
-	failure  string
-	key      string
+	TestName string
+	Err      error
+	Valid    bool
+	Failure  string
+	Key      string
 }
 
 func (r result) errorf(format string, v ...interface{}) result {
-	r.err = fmt.Errorf(format, v...)
+	r.Err = fmt.Errorf(format, v...)
 	return r
 }
 
 func (r result) failedf(format string, v ...interface{}) result {
-	r.failure = fmt.Sprintf(format, v...)
+	r.Failure = fmt.Sprintf(format, v...)
 	return r
 }
 
 func (r result) mismatch(expected string, got interface{}) result {
 	return r.failedf("Type mismatch for key '%s'. Expected %s but got %T.",
-		r.key, expected, got)
+		r.Key, expected, got)
 }
 
 func (r result) valMismatch(expected string, got string) result {
 	return r.failedf("Type mismatch for key '%s'. Expected %s but got %s.",
-		r.key, expected, got)
+		r.Key, expected, got)
 }
 
 func (r result) kjoin(key string) result {
-	if len(r.key) == 0 {
-		r.key = key
+	if len(r.Key) == 0 {
+		r.Key = key
 	} else {
-		r.key += "." + key
+		r.Key += "." + key
 	}
 	return r
 }
 
 func (r result) failed() bool {
-	return r.err != nil || len(r.failure) > 0
+	return r.Err != nil || len(r.Failure) > 0
 }
 
 func (r result) pathTest() string {
@@ -57,26 +57,26 @@ func (r result) pathTest() string {
 	if flagEncoder {
 		ext = "json"
 	}
-	if r.valid {
-		return vPath("%s.%s", r.testName, ext)
+	if r.Valid {
+		return vPath("%s.%s", r.TestName, ext)
 	}
-	return invPath("%s.%s", r.testName, ext)
+	return invPath("%s.%s", r.TestName, ext)
 }
 
 func (r result) pathGold() string {
-	if !r.valid {
+	if !r.Valid {
 		panic("Invalid tests do not have a 'correct' version.")
 	}
 	if flagEncoder {
-		return vPath("%s.toml", r.testName)
+		return vPath("%s.toml", r.TestName)
 	}
-	return vPath("%s.json", r.testName)
+	return vPath("%s.json", r.TestName)
 }
 
 func runInvalidTest(name string) result {
 	r := result{
-		testName: name,
-		valid:    false,
+		TestName: name,
+		Valid:    false,
 	}
 
 	_, stderr, err := runParser(r.pathTest())
@@ -97,8 +97,8 @@ func runInvalidTest(name string) result {
 
 func runValidTest(name string) result {
 	r := result{
-		testName: name,
-		valid:    true,
+		TestName: name,
+		Valid:    true,
 	}
 
 	stdout, stderr, err := runParser(r.pathTest())
@@ -193,17 +193,17 @@ func (r result) String() string {
 	p := func(s string, v ...interface{}) { fmt.Fprintf(buf, s, v...) }
 
 	validStr := "invalid"
-	if r.valid {
+	if r.Valid {
 		validStr = "valid"
 	}
-	p("Test: %s (%s)\n\n", r.testName, validStr)
+	p("Test: %s (%s)\n\n", r.TestName, validStr)
 
-	if r.err != nil {
-		p("Error running test: %s", r.err)
+	if r.Err != nil {
+		p("Error running test: %s", r.Err)
 		return buf.String()
 	}
-	if len(r.failure) > 0 {
-		p(r.failure)
+	if len(r.Failure) > 0 {
+		p(r.Failure)
 		return buf.String()
 	}
 
